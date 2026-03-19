@@ -1,10 +1,10 @@
 <script>
-    // ESTA ES TU CONTRASEÑA. Cambia "1234" por la que tú quieras.
-    const CLAVE = "1234"; 
-    const acceso = prompt("Panel de Control TECHNNEN\nIntroduce la clave:");
-    if (acceso !== CLAVE) {
+    // ESTA ES TU CONTRASEÑA. Puedes cambiarla por la que quieras.
+    const MI_CLAVE = "1234"; 
+    const entrada = prompt("TECHNNEN - Acceso Privado\nIntroduce tu contraseña:");
+    if (entrada !== MI_CLAVE) {
         alert("Acceso denegado.");
-        window.location.href = "index.html";
+        window.location.href = "index.html"; // Expulsa a los intrusos a la tienda
     }
 </script>
 
@@ -18,26 +18,26 @@
 </head>
 <body class="bg-slate-100 p-4">
     <div class="max-w-4xl mx-auto">
-        <header class="bg-blue-900 text-white p-6 rounded-2xl mb-6 shadow-lg">
-            <h1 class="text-2xl font-black italic">TECHNNEN <span class="text-blue-300 text-sm">ADMIN</span></h1>
+        <header class="bg-blue-900 text-white p-6 rounded-2xl mb-6 shadow-xl border-b-4 border-blue-500">
+            <h1 class="text-2xl font-black italic uppercase">TECHNNEN <span class="text-blue-300 text-sm">Panel Admin</span></h1>
         </header>
 
-        <div class="bg-white p-6 rounded-2xl shadow-sm mb-6">
-            <form id="form-p" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <input type="text" id="n" placeholder="Producto" class="p-3 border rounded-xl" required>
-                <input type="number" id="p" placeholder="Precio $" class="p-3 border rounded-xl" required>
-                <input type="number" id="s" placeholder="Stock" class="p-3 border rounded-xl" required>
-                <input type="url" id="u" placeholder="Link de Foto (URL)" class="p-3 border rounded-xl" required>
-                <button class="md:col-span-2 bg-blue-600 text-white p-4 rounded-xl font-bold">GUARDAR PRODUCTO</button>
+        <div class="bg-white p-6 rounded-2xl shadow-sm mb-6 border border-slate-200">
+            <form id="form-stock" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <input type="text" id="nombre" placeholder="Nombre del Producto" class="p-3 bg-slate-50 rounded-xl outline-none focus:ring-2 focus:ring-blue-500" required>
+                <input type="number" id="precio" placeholder="Precio $" class="p-3 bg-slate-50 rounded-xl" required>
+                <input type="number" id="stock" placeholder="Cantidad" class="p-3 bg-slate-50 rounded-xl" required>
+                <input type="url" id="imagen" placeholder="URL de la imagen" class="p-3 bg-slate-50 rounded-xl" required>
+                <button class="md:col-span-2 bg-blue-600 hover:bg-slate-900 text-white p-4 rounded-xl font-bold transition-all uppercase tracking-widest text-xs">Añadir al Inventario</button>
             </form>
         </div>
 
-        <div class="bg-white rounded-2xl shadow-sm overflow-hidden">
-            <table class="w-full text-left">
-                <thead class="bg-slate-50 text-xs font-bold text-slate-400">
-                    <tr><th class="p-4">FOTO</th><th class="p-4">NOMBRE</th><th class="p-4 text-center">STOCK</th><th class="p-4">PRECIO</th><th class="p-4 text-center">ACCION</th></tr>
+        <div class="bg-white rounded-2xl shadow-sm overflow-hidden border border-slate-200">
+            <table class="w-full text-left text-sm">
+                <thead class="bg-slate-50 font-bold text-slate-400 uppercase text-[10px]">
+                    <tr><th class="p-4">Foto</th><th class="p-4">Producto</th><th class="p-4 text-center">Stock</th><th class="p-4">Precio</th><th class="p-4 text-center">Acción</th></tr>
                 </thead>
-                <tbody id="lista"></tbody>
+                <tbody id="tabla-body" class="divide-y divide-slate-100"></tbody>
             </table>
         </div>
     </div>
@@ -56,26 +56,38 @@
         };
         const db = getFirestore(initializeApp(firebaseConfig));
 
-        document.getElementById('form-p').addEventListener('submit', async (e) => {
+        // Función para Guardar
+        document.getElementById('form-stock').addEventListener('submit', async (e) => {
             e.preventDefault();
             await addDoc(collection(db, "productos"), {
-                nombre: document.getElementById('n').value,
-                precio: parseFloat(document.getElementById('p').value),
-                stock: parseInt(document.getElementById('s').value),
-                urlImagen: document.getElementById('u').value,
+                nombre: document.getElementById('nombre').value,
+                precio: parseFloat(document.getElementById('precio').value),
+                stock: parseInt(document.getElementById('stock').value),
+                urlImagen: document.getElementById('imagen').value,
                 fecha: new Date()
             });
             e.target.reset();
         });
 
+        // Función para Leer y Mostrar
         onSnapshot(query(collection(db, "productos"), orderBy("fecha", "desc")), (snap) => {
-            const l = document.getElementById('lista'); l.innerHTML = "";
-            snap.forEach(d => {
-                const i = d.data();
-                l.innerHTML += `<tr class="border-t"><td class="p-4"><img src="${i.urlImagen}" class="w-10 h-10 object-cover rounded-lg"></td><td class="p-4 font-bold">${i.nombre}</td><td class="p-4 text-center">${i.stock}</td><td class="p-4 font-bold text-blue-600">$${i.precio}</td><td class="p-4 text-center"><button onclick="borrar('${d.id}')" class="text-red-400"><i class="fas fa-trash"></i></button></td></tr>`;
+            const t = document.getElementById('tabla-body'); t.innerHTML = "";
+            snap.forEach(docSnap => {
+                const p = docSnap.data();
+                t.innerHTML += `
+                <tr class="hover:bg-slate-50 transition">
+                    <td class="p-4"><img src="${p.urlImagen}" class="w-10 h-10 object-cover rounded-lg shadow-sm"></td>
+                    <td class="p-4 font-bold text-slate-700">${p.nombre}</td>
+                    <td class="p-4 text-center font-black">${p.stock}</td>
+                    <td class="p-4 font-bold text-blue-600">$${p.precio}</td>
+                    <td class="p-4 text-center">
+                        <button onclick="borrar('${docSnap.id}')" class="text-slate-300 hover:text-red-500 transition"><i class="fas fa-trash"></i></button>
+                    </td>
+                </tr>`;
             });
         });
-        window.borrar = (id) => confirm("¿Borrar?") && deleteDoc(doc(db, "productos", id));
+
+        window.borrar = (id) => confirm("¿Deseas eliminar este producto de TECHNNEN?") && deleteDoc(doc(db, "productos", id));
     </script>
 </body>
 </html>
