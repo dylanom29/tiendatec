@@ -1,3 +1,18 @@
+<script>
+    // Configura tu clave secreta aquí
+    const CLAVE_MAESTRA = "dylan123"; // <--- Cambia "1234" por la contraseña que tú quieras
+
+    function verificarAcceso() {
+        const intento = prompt("Acceso Restringido - tiendatech\nPor favor, introduce la clave de administrador:");
+        
+        if (intento !== CLAVE_MAESTRA) {
+            alert("Clave incorrecta. Serás redirigido a la tienda.");
+            window.location.href = "tiendatec.html";
+        }
+    }
+
+    verificarAcceso();
+</script>
 <!DOCTYPE html>
 <html lang="es">
 <head>
