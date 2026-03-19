@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>TIENDATEC - Store</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        @media print {
+            body * { visibility: hidden; }
+            #ticket-imprimir, #ticket-imprimir * { visibility: visible; }
+            #ticket-imprimir { position: absolute; left: 0; top: 0; width: 100%; border: none; }
+            .no-print { display: none; }
+        }
+    </style>
+</head>
+<body class="bg-white">
+    <header class="p-6 border-b border-slate-100 flex justify-between items-center max-w-7xl mx-auto">
+        <h1 class="text-3xl font-black italic tracking-tighter text-slate-900">TIENDA<span class="text-blue-600">TEC</span></h1>
+        <div class="text-[10px] bg-blue-50 text-blue-600 px-3 py-1 rounded-full font-bold uppercase tracking-widest">Catálogo Online</div>
+    </header>
+
+    <main class="max-w-7xl mx-auto p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 mt-6" id="grid-productos"></main>
+
+    <div id="modal-ticket" class="hidden fixed inset-0 bg-slate-900/90 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+        <div id="ticket-imprimir" class="bg-white p-8 rounded-sm shadow-2xl max-w-sm w-full font-mono text-slate-800 border-t-8 border-blue-600">
+            <div class="text-center mb-6">
+                <h2 class="text-2xl font-black italic">TIENDATEC</h2>
+                <p class="text-[10px] uppercase tracking-widest opacity-50">Comprobante de Pago</p>
+            </div>
+            <div class="space-y-2 text-sm">
+                <p class="flex justify-between"><span>Fecha:</span> <span id="t-fecha"></span></p>
+                <p class="flex justify-between font-bold text-lg leading-none"><span>Art:</span> <span id="t-nombre"></span></p>
+                <hr class="border-dashed border-slate-200 my-4">
+                <p class="flex justify-between text-2xl font-black"><span>TOTAL:</span> <span id="t-precio"></span></p>
+            </div>
+            <div class="mt-8 space-y-3 no-print">
+                <button onclick="window.print()" class="w-full bg-blue-600 text-white py-3 rounded-xl font-bold shadow-lg shadow-blue-100">IMPRIMIR TICKET</button>
+                <button onclick="cerrarTicket()" class="w-full text-slate-400 text-sm">Regresar a la tienda</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyB-v0_pepsYcFTrVisGPx1a0_OxWSu9SbU",
+            authDomain: "tiendatec-4307f.firebaseapp.com",
+            projectId: "tiendatec-4307f",
+            storageBucket: "tiendatec-4307f.firebasestorage.app",
+            messagingSenderId: "810142772386",
+            appId: "1:810142772386:web:2fb664275b1e76b3d23bfb"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        db.collection("productos").orderBy("fecha", "desc").onSnapshot(snap => {
+            const grid = document.getElementById('grid-productos');
+            grid.innerHTML = "";
+            snap.forEach(doc => {
+                const p = doc.data();
+                const agotado = p.stock <= 0;
+                
+                grid.innerHTML += `
+                    <div class="group border border-slate-50 p-4 rounded-[2.5rem] hover:shadow-2xl transition-all duration-500">
+                        <div class="relative aspect-square rounded-[2rem] overflow-hidden bg-slate-50 mb-4">
+                            <img src="${p.urlImagen}" class="w-full h-full object-cover transition duration-700 ${agotado ? 'grayscale opacity-30' : 'group-hover:scale-110'}">
+                            ${agotado ? '<div class="absolute inset-0 flex items-center justify-center font-black text-red-500 uppercase text-[10px] bg-white/60">Sin Stock</div>' : ''}
+                        </div>
+                        <div class="px-2">
+                            <h3 class="font-bold text-slate-800 truncate">${p.nombre}</h3>
+                            <p class="text-[10px] text-slate-400 font-bold">DISPONIBLES: ${p.stock}</p>
+                            <div class="flex justify-between items-center mt-4">
+                                <span class="font-black text-xl text-slate-900">$${p.precio}</span>
+                                <button onclick="comprar('${doc.id}', '${p.nombre}', '${p.precio}', ${p.stock})" 
+                                    ${agotado ? 'disabled' : ''}
+                                    class="bg-blue-600 text-white px-5 py-2 rounded-2xl font-bold text-xs hover:bg-slate-900 disabled:bg-slate-100 disabled:text-slate-300 transition-all uppercase">
+                                    Comprar
+                                </button>
+                            </div>
+                        </div>
+                    </div>`;
+            });
+        });
+
+        async function comprar(id, nombre, precio, stockActual) {
+            if(confirm(`¿Deseas comprar ${nombre}?`)) {
+                try {
+                    // ACTUALIZAR STOCK RESTANDO 1
+                    await db.collection("productos").doc(id).update({
+                        stock: stockActual - 1
+                    });
+
+                    // DATOS TICKET
+                    document.getElementById('t-nombre').innerText = nombre;
+                    document.getElementById('t-precio').innerText = "$" + precio;
+                    document.getElementById('t-fecha').innerText = new Date().toLocaleString();
+                    document.getElementById('modal-ticket').classList.remove('hidden');
+                } catch (e) {
+                    alert("Error al procesar la compra.");
+                }
+            }
+        }
+
+        function cerrarTicket() { document.getElementById('modal-ticket').classList.add('hidden'); }
+    </script>
+</body>
+</html>

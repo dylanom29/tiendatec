@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin - TIENDATEC</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body class="bg-slate-50 p-6">
+    <div class="max-w-4xl mx-auto">
+        <header class="bg-blue-900 text-white p-6 rounded-3xl shadow-lg mb-8">
+            <h1 class="text-2xl font-black italic">TIENDA<span class="text-blue-400">TEC</span> <span class="text-xs uppercase opacity-60 ml-2">Admin</span></h1>
+        </header>
+
+        <div class="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 mb-8">
+            <form id="form-producto" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <input type="text" id="nombre" placeholder="Nombre del Producto" class="p-4 bg-slate-50 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 transition" required>
+                <input type="number" id="precio" placeholder="Precio $" class="p-4 bg-slate-50 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 transition" required>
+                <input type="number" id="stock" placeholder="Cantidad Stock" class="p-4 bg-slate-50 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 transition" required>
+                <input type="url" id="urlImagen" placeholder="URL de la imagen (JPG/PNG)" class="p-4 bg-slate-50 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 transition" required>
+                <button type="submit" class="md:col-span-2 bg-blue-600 text-white font-bold py-4 rounded-2xl hover:bg-slate-900 shadow-lg shadow-blue-100 transition-all uppercase tracking-widest text-xs">Guardar en Inventario</button>
+            </form>
+        </div>
+
+        <div class="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
+            <table class="w-full text-left">
+                <thead class="bg-slate-50 border-b border-slate-100">
+                    <tr class="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                        <th class="p-5">Vista</th>
+                        <th class="p-5">Producto</th>
+                        <th class="p-5 text-center">Stock</th>
+                        <th class="p-5">Precio</th>
+                        <th class="p-5 text-center">Borrar</th>
+                    </tr>
+                </thead>
+                <tbody id="lista-admin" class="divide-y divide-slate-50"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyB-v0_pepsYcFTrVisGPx1a0_OxWSu9SbU",
+            authDomain: "tiendatec-4307f.firebaseapp.com",
+            projectId: "tiendatec-4307f",
+            storageBucket: "tiendatec-4307f.firebasestorage.app",
+            messagingSenderId: "810142772386",
+            appId: "1:810142772386:web:2fb664275b1e76b3d23bfb"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // AGREGAR PRODUCTO
+        document.getElementById('form-producto').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            try {
+                await addDoc(collection(db, "productos"), {
+                    nombre: document.getElementById('nombre').value,
+                    precio: parseFloat(document.getElementById('precio').value),
+                    stock: parseInt(document.getElementById('stock').value),
+                    urlImagen: document.getElementById('urlImagen').value,
+                    fecha: new Date()
+                });
+                e.target.reset();
+            } catch (err) { console.error(err); }
+        });
+
+        // LEER PRODUCTOS
+        const q = query(collection(db, "productos"), orderBy("fecha", "desc"));
+        onSnapshot(q, (snap) => {
+            const tabla = document.getElementById('lista-admin');
+            tabla.innerHTML = "";
+            snap.forEach((d) => {
+                const p = d.data();
+                tabla.innerHTML += `
+                    <tr class="hover:bg-slate-50 transition">
+                        <td class="p-5"><img src="${p.urlImagen}" class="w-12 h-12 object-cover rounded-xl shadow-sm"></td>
+                        <td class="p-5 font-bold text-slate-700">${p.nombre}</td>
+                        <td class="p-5 text-center font-black text-slate-500">${p.stock}</td>
+                        <td class="p-5 font-black text-blue-600">$${p.precio}</td>
+                        <td class="p-5 text-center">
+                            <button onclick="borrarProd('${d.id}')" class="text-slate-300 hover:text-red-500"><i class="fas fa-trash-alt"></i></button>
+                        </td>
+                    </tr>`;
+            });
+        });
+
+        window.borrarProd = async (id) => { if(confirm("¿Eliminar?")) await deleteDoc(doc(db, "productos", id)); };
+    </script>
+</body>
+</html>
