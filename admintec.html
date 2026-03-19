@@ -1,54 +1,43 @@
 <script>
-    // Configura tu clave secreta aquí
-    const CLAVE_MAESTRA = "dylan123"; // <--- Cambia "1234" por la contraseña que tú quieras
-
-    function verificarAcceso() {
-        const intento = prompt("Acceso Restringido - tiendatech\nPor favor, introduce la clave de administrador:");
-        
-        if (intento !== CLAVE_MAESTRA) {
-            alert("Clave incorrecta. Serás redirigido a la tienda.");
-            window.location.href = "tiendatec.html";
-        }
+    // ESTA ES TU CONTRASEÑA. Cambia "1234" por la que tú quieras.
+    const CLAVE = "1234"; 
+    const acceso = prompt("Panel de Control TECHNNEN\nIntroduce la clave:");
+    if (acceso !== CLAVE) {
+        alert("Acceso denegado.");
+        window.location.href = "index.html";
     }
-
-    verificarAcceso();
 </script>
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Admin - TIENDATEC</title>
+    <title>Admin - TECHNNEN</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
-<body class="bg-slate-50 p-6">
+<body class="bg-slate-100 p-4">
     <div class="max-w-4xl mx-auto">
-        <header class="bg-blue-900 text-white p-6 rounded-3xl shadow-lg mb-8">
-            <h1 class="text-2xl font-black italic">TIENDA<span class="text-blue-400">TEC</span> <span class="text-xs uppercase opacity-60 ml-2">Admin</span></h1>
+        <header class="bg-blue-900 text-white p-6 rounded-2xl mb-6 shadow-lg">
+            <h1 class="text-2xl font-black italic">TECHNNEN <span class="text-blue-300 text-sm">ADMIN</span></h1>
         </header>
 
-        <div class="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 mb-8">
-            <form id="form-producto" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <input type="text" id="nombre" placeholder="Nombre del Producto" class="p-4 bg-slate-50 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 transition" required>
-                <input type="number" id="precio" placeholder="Precio $" class="p-4 bg-slate-50 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 transition" required>
-                <input type="number" id="stock" placeholder="Cantidad Stock" class="p-4 bg-slate-50 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 transition" required>
-                <input type="url" id="urlImagen" placeholder="URL de la imagen (JPG/PNG)" class="p-4 bg-slate-50 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 transition" required>
-                <button type="submit" class="md:col-span-2 bg-blue-600 text-white font-bold py-4 rounded-2xl hover:bg-slate-900 shadow-lg shadow-blue-100 transition-all uppercase tracking-widest text-xs">Guardar en Inventario</button>
+        <div class="bg-white p-6 rounded-2xl shadow-sm mb-6">
+            <form id="form-p" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <input type="text" id="n" placeholder="Producto" class="p-3 border rounded-xl" required>
+                <input type="number" id="p" placeholder="Precio $" class="p-3 border rounded-xl" required>
+                <input type="number" id="s" placeholder="Stock" class="p-3 border rounded-xl" required>
+                <input type="url" id="u" placeholder="Link de Foto (URL)" class="p-3 border rounded-xl" required>
+                <button class="md:col-span-2 bg-blue-600 text-white p-4 rounded-xl font-bold">GUARDAR PRODUCTO</button>
             </form>
         </div>
 
-        <div class="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
+        <div class="bg-white rounded-2xl shadow-sm overflow-hidden">
             <table class="w-full text-left">
-                <thead class="bg-slate-50 border-b border-slate-100">
-                    <tr class="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                        <th class="p-5">Vista</th>
-                        <th class="p-5">Producto</th>
-                        <th class="p-5 text-center">Stock</th>
-                        <th class="p-5">Precio</th>
-                        <th class="p-5 text-center">Borrar</th>
-                    </tr>
+                <thead class="bg-slate-50 text-xs font-bold text-slate-400">
+                    <tr><th class="p-4">FOTO</th><th class="p-4">NOMBRE</th><th class="p-4 text-center">STOCK</th><th class="p-4">PRECIO</th><th class="p-4 text-center">ACCION</th></tr>
                 </thead>
-                <tbody id="lista-admin" class="divide-y divide-slate-50"></tbody>
+                <tbody id="lista"></tbody>
             </table>
         </div>
     </div>
@@ -65,46 +54,28 @@
             messagingSenderId: "810142772386",
             appId: "1:810142772386:web:2fb664275b1e76b3d23bfb"
         };
+        const db = getFirestore(initializeApp(firebaseConfig));
 
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-
-        // AGREGAR PRODUCTO
-        document.getElementById('form-producto').addEventListener('submit', async (e) => {
+        document.getElementById('form-p').addEventListener('submit', async (e) => {
             e.preventDefault();
-            try {
-                await addDoc(collection(db, "productos"), {
-                    nombre: document.getElementById('nombre').value,
-                    precio: parseFloat(document.getElementById('precio').value),
-                    stock: parseInt(document.getElementById('stock').value),
-                    urlImagen: document.getElementById('urlImagen').value,
-                    fecha: new Date()
-                });
-                e.target.reset();
-            } catch (err) { console.error(err); }
+            await addDoc(collection(db, "productos"), {
+                nombre: document.getElementById('n').value,
+                precio: parseFloat(document.getElementById('p').value),
+                stock: parseInt(document.getElementById('s').value),
+                urlImagen: document.getElementById('u').value,
+                fecha: new Date()
+            });
+            e.target.reset();
         });
 
-        // LEER PRODUCTOS
-        const q = query(collection(db, "productos"), orderBy("fecha", "desc"));
-        onSnapshot(q, (snap) => {
-            const tabla = document.getElementById('lista-admin');
-            tabla.innerHTML = "";
-            snap.forEach((d) => {
-                const p = d.data();
-                tabla.innerHTML += `
-                    <tr class="hover:bg-slate-50 transition">
-                        <td class="p-5"><img src="${p.urlImagen}" class="w-12 h-12 object-cover rounded-xl shadow-sm"></td>
-                        <td class="p-5 font-bold text-slate-700">${p.nombre}</td>
-                        <td class="p-5 text-center font-black text-slate-500">${p.stock}</td>
-                        <td class="p-5 font-black text-blue-600">$${p.precio}</td>
-                        <td class="p-5 text-center">
-                            <button onclick="borrarProd('${d.id}')" class="text-slate-300 hover:text-red-500"><i class="fas fa-trash-alt"></i></button>
-                        </td>
-                    </tr>`;
+        onSnapshot(query(collection(db, "productos"), orderBy("fecha", "desc")), (snap) => {
+            const l = document.getElementById('lista'); l.innerHTML = "";
+            snap.forEach(d => {
+                const i = d.data();
+                l.innerHTML += `<tr class="border-t"><td class="p-4"><img src="${i.urlImagen}" class="w-10 h-10 object-cover rounded-lg"></td><td class="p-4 font-bold">${i.nombre}</td><td class="p-4 text-center">${i.stock}</td><td class="p-4 font-bold text-blue-600">$${i.precio}</td><td class="p-4 text-center"><button onclick="borrar('${d.id}')" class="text-red-400"><i class="fas fa-trash"></i></button></td></tr>`;
             });
         });
-
-        window.borrarProd = async (id) => { if(confirm("¿Eliminar?")) await deleteDoc(doc(db, "productos", id)); };
+        window.borrar = (id) => confirm("¿Borrar?") && deleteDoc(doc(db, "productos", id));
     </script>
 </body>
 </html>
